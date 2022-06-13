@@ -60,9 +60,13 @@ class HMC(nn.Module):
         #self.log_v_r = torch.nn.Parameter(torch.zeros([L, dim]))
         self.log_v_r = torch.nn.Parameter(torch.zeros([T, dim]))
 
+        # If the proposal is given, we do not optimize
         if mu0!=None and var0!=None:
-            self.mu0 = torch.nn.Parameter(mu0)
-            self.logvar0 = torch.nn.Parameter(torch.log(var0))
+            self.mu0 = mu0
+            self.logvar0 = torch.log(var0)
+        else:
+            self.mu0 = torch.nn.Parameter(torch.zeros([2]))
+            self.logvar0 = torch.nn.Parameter(torch.zeros(2))
             
         # Scale (inflation) factor
         self.log_inflation = torch.nn.Parameter(torch.zeros(1))

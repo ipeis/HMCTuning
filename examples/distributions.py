@@ -52,11 +52,26 @@ def plot_distribution(name):
 def initial_proposal(distribution):
 
     if distribution=='gaussian_mixture':
-        mu0 = torch.zeros([1, 2])
-        var0 = torch.ones([1, 2])*0.1
+        mu0 = torch.zeros([2])
+        var0 = torch.ones([2])*0.01
 
     elif distribution=='wave':
-        mu0 = torch.zeros([1, 2])
+        mu0 = torch.zeros([2])
+        var0 = torch.Tensor([5.5, 1])
+    
+    return mu0, var0
+
+
+def update_proposal(distribution, iter, niters):
+
+    if distribution=='gaussian_mixture':
+        delta = 2*np.pi/niters
+        mu0 = torch.Tensor([np.cos(iter * delta), np.sin(iter*delta)])
+        var0 = torch.ones([2])*0.01
+
+
+    elif distribution=='wave':
+        mu0 = torch.zeros([2])
         var0 = torch.Tensor([5.5, 1])
     
     return mu0, var0

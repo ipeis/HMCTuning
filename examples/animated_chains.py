@@ -16,14 +16,16 @@ import torch
 import torch.distributions as D
 import matplotlib.pyplot as plt
 import numpy as np
-from PIL import Image
-import glob
+from scipy.stats import multivariate_normal as mnormal
+from distributions import *
+from utils import *
+
 
 # ============= ARGS ============= #
 
 parser = argparse.ArgumentParser(description='Train the hyperparameters of HMC using Variational Inference')
 
-parser.add_argument('--distribution', type=str, default='wave', 
+parser.add_argument('--distribution', type=str, default='gaussian_mixture', 
                     help='name of the distribution (from srd/distributions.py)')
 parser.add_argument('--T', type=int, default=5, 
                     help='length of the HMC chains (number of states)')
@@ -48,8 +50,8 @@ if str(device) == "cuda":
     print('cuda activated')
 
 
-if not os.path.isdir('./figs/{}'.format(args.distribution)):
-    os.makedirs('./figs/{}'.format(args.distribution))
+if not os.path.isdir('./figs/chains/{}'.format(args.distribution)):
+    os.makedirs('./figs/chains/{}'.format(args.distribution))
 
 def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
     
@@ -69,7 +71,7 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
         plt.ylim(-10, 10) 
     plt.title('step 0')
     
-    def reset_axis(ax, step, samples=None):
+    def reset_axis(ax, step, mu0, var0, samples=None,):
         ax.clear()
         plt.axis('off')
         # Gaussian mixture
@@ -78,9 +80,25 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
         # Dual moon
         #plt.xlim(-2, 2) 
         #plt.ylim(-2, 2) 
-        if distribution=='wave':
-            plt.xlim(-10, 10) 
-            plt.ylim(-10, 10) 
+        
+        if distribution=='gaussian_mixture':
+            xmin = -1.3
+            xmax = 1.3
+            ymin = -1.3
+            ymax = 1.3
+
+        elif distribution=='wave':
+            xmin = -10
+            xmax = 10
+            ymin = -10
+            ymax = 10
+
+        
+        xgrid = np.linspace(xmin, xmax, 1000)
+        ygrid = np.linspace(ymin, ymax, 1000)
+
+        plot_bi_gaussian(mu0, var0, xgrid, ygrid, ax)
+
         if len(samples) != 0:
             x = torch.stack(samples)[-3*samples_per_step:, 0].detach().numpy()
             y = torch.stack(samples)[-3*samples_per_step:, 1].detach().numpy()
@@ -91,6 +109,9 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
             #alphas = np.clip(alphas, 0.1, 1)
             ax.scatter(x, y, marker='*', color=sample_color, alpha=alphas)
             plt.title('step {}'.format(step))
+        
+        plt.xlim(xmin, xmax) 
+        plt.ylim(ymin, ymax) 
         
 
     logp = get_logp(distribution)
@@ -115,16 +136,16 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
         alphas = np.linspace(0.1, 1, chains.shape[0])[::-1]
         for c in range(chains.shape[1]):
             for t in range(1,chains.shape[0]+1):
-                reset_axis(ax, e, samples)
+                reset_axis(ax, e, mu0, var0, samples)
                 ax.plot(chains[:t,c,0].detach().numpy(), chains[:t,c,1].detach().numpy(), marker='o', color=chain_color, alpha=alphas[t-1])
-                plt.savefig('figs/{}/{:05d}.png'.format(distribution, im))
+                plt.savefig('figs/chains/{}/{:05d}.png'.format(distribution, im))
                 im+=1
             ax.plot(chains[-1, c, 0].detach().numpy(), chains[-1, c, 1].detach().numpy(), marker='*', color=sample_color)
-            plt.savefig('figs/{}/{:05d}.png'.format(distribution, im))
+            plt.savefig('figs/chains/{}/{:05d}.png'.format(distribution, im))
             im+=1
             samples.append(chains[-1, c])
-            reset_axis(ax, e, samples)
-            plt.savefig('figs/{}/{:05d}.png'.format(distribution, im))
+            reset_axis(ax, e, mu0, var0, samples)
+            plt.savefig('figs/chains/{}/{:05d}.png'.format(distribution, im))
             im+=1
         samples = samples + list(z)
         hmc.optimizer.zero_grad()
@@ -147,19 +168,10 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
         loss.append(_loss[torch.isfinite(_loss)].mean())
         objective.append(-_loss.mean())
         sksd.append(_sksd)
-    reset_axis(ax, e, [])
+    reset_axis(ax, e, mu0, var0, samples)
     ax.scatter(torch.stack(samples)[-samples_per_step:, 0].detach().numpy(), torch.stack(samples)[-samples_per_step:, 1].detach().numpy(), marker='*', color=sample_color, alpha=0.5)
     plt.title('step {}'.format(e))
-    plt.savefig('figs/{}/samples.pdf'.format(distribution, im))
-
-def make_gif(folder, delete=True):
-    frames = [Image.open(image) for image in sorted(glob.glob(f"{folder}/*.png"))]
-    frame_one = frames[0]
-    frame_one.save("{}/samples.gif".format(folder), format="GIF", append_images=frames,
-               save_all=True, duration=20, loop=0)
-    if delete:
-        [os.remove(image) for image in sorted(glob.glob(f"{folder}/*.png"))]
-
+    plt.savefig('figs/chains/{}/samples.pdf'.format(distribution, im))
 
 if __name__ == '__main__':
 
@@ -172,6 +184,6 @@ if __name__ == '__main__':
 
     plot_chains(args.distribution, args.steps, samples_per_step=1000, chains_per_step=3)
 
-    make_gif('figs/{}/'.format(args.distribution))
+    make_gif('figs/chains/{}/'.format(args.distribution))
 
 
