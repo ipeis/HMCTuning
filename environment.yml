@@ -10,7 +10,7 @@ dependencies:
   - torchvision=0.8.2
   - pip=20.0.2=py37_1
   - pip:
-      - pytorch-lightning==1.5.1
+      - pytorch-lightning==1.6.0
       - matplotlib
       - scipy
       - pandas
