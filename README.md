@@ -3,10 +3,10 @@
 This repository contains a Python package for running HMC with Pytorch, including automatic optimization of its hyperparameters. You will be able to i) sample, by means of HMC, from any target distribution, given as a complex unnormalized target, and ii) automatically tune the HMC hyperparameters to improve the efficiency in exploring the density.
 
 The hyperparameters are:
-* Step sizes $\bm{\epsilon}$. Matrix with dims $(T,D)$. Different step sizes can be learned to be applied within each state of the chains.
+* Step sizes $\mathbf{\epsilon}$. Matrix with dims $(T,D)$. Different step sizes can be learned to be applied within each state of the chains.
 * Momentum variances, $M$. Matrix with dims $(T, D)$.
-* An inflation/scale parameter $\bm{s}$, that can be a scalar or a vector with dims $D$ so that different inflations can be applied per dimension.
-* If not defined, the Gaussian proposal parameters $\bm{\mu}$ and $\bm{\Sigma}$ can also be tuned.
+* An inflation/scale parameter $\mathbf{s}$, that can be a scalar or a vector with dims $D$ so that different inflations can be applied per dimension.
+* If not defined, the Gaussian proposal parameters $\mathbf{\mu}$ and $\mathbf{\Sigma}$ can also be tuned.
 
 For further details about the algorithm, see Section 3.5 of [our paper](https://arxiv.org/pdf/2202.04599.pdf), where we adapted the HMC tuning for a Hierarchical VAE. Original idea can be found [here](https://proceedings.mlr.press/v139/campbell21a.html). If you refer to this algorithm, please consider citing both works. If you use this code, please cite:
 ```
@@ -31,7 +31,7 @@ hmc = HMC( dim, logp, T,  L, chains, chains_sksd, mu0, var0)
 ```
 where:
 * <code>dim</code> is the dimension of the target space.
-* <code>logp</code> is a <code>Callable</code> (function) that returns the probability $\log p(\bm{x})$ for an input $\bm{x}$.
+* <code>logp</code> is a <code>Callable</code> (function) that returns the probability $\log p(\mathbf{x})$ for an input $\mathbf{x}$.
 * <code>T</code> is the length if the chains.
 * <code>L</code> is the number of Leapfrog steps.
 * <code>chains</code> is the number of parallel chains used for each optimization step.
