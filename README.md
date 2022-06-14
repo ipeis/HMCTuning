@@ -6,7 +6,7 @@ The hyperparameters are:
 * Step sizes $\mathbf{\epsilon}$. Matrix with dims $(T,D)$. Different step sizes can be learned to be applied within each state of the chains.
 * Momentum variances, $M$. Matrix with dims $(T, D)$.
 * An inflation/scale parameter $\mathbf{s}$, that can be a scalar or a vector with dims $D$ so that different inflations can be applied per dimension.
-* If not defined, the Gaussian proposal parameters $\mathbf{\mu}$ and $\mathbf{\Sigma}$ can also be tuned.
+* You can choose to tune the Gaussian proposal parameters $\mathbf{\mu}$ and $\mathbf{\Sigma}$ or fix them.
 
 For further details about the algorithm, see Section 3.5 of [our paper](https://arxiv.org/pdf/2202.04599.pdf), where we adapted the HMC tuning for a Hierarchical VAE. Original idea can be found [here](https://proceedings.mlr.press/v139/campbell21a.html). If you refer to this algorithm, please consider citing both works. If you use this code, please cite:
 ```
@@ -27,7 +27,7 @@ conda env create -f environment.yml
 ## Usage
 In this section you can find details about the usage of the package. Some useful examples are included in <code>examples</code>. An HMC instance can be created using 
 ```
-hmc = HMC( dim, logp, T,  L, chains, chains_sksd, mu0, var0)
+hmc = HMC( dim, logp, T,  L, chains, chains_sksd, mu0, var0, opt_proposal, vector_scale)
 ```
 where:
 * <code>dim</code> is the dimension of the target space.
