@@ -55,7 +55,7 @@ if not os.path.isdir('./figs/chains/{}'.format(args.distribution)):
 
 def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
     
-    f, ax = plt.subplots(figsize=(6, 6))
+    f, ax = plt.subplots(figsize=(5, 5))
     f.tight_layout()
     chain_color='gray'
     sample_color='tab:green'
@@ -100,13 +100,10 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
         plot_bi_gaussian(mu0, var0, xgrid, ygrid, ax)
 
         if len(samples) != 0:
-            x = torch.stack(samples)[-3*samples_per_step:, 0].detach().numpy()
-            y = torch.stack(samples)[-3*samples_per_step:, 1].detach().numpy()
-            alphas = np.ones_like(x)
-            alphas[:-samples_per_step] = np.linspace(0, 1, len(alphas[:-samples_per_step]))
-            #alphas = np.linspace(0.01, 1, len(samples))
-            #alphas =  np.floor(alphas / (1.0/(1+int(len(samples) / (samples_per_step))))) 
-            #alphas = np.clip(alphas, 0.1, 1)
+            samples = torch.stack(samples).detach().numpy().reshape(-1, 2)
+            x = samples[:, 0]
+            y = samples[:, 1]
+            alphas = np.linspace(0, 1, len(x))
             ax.scatter(x, y, marker='*', color=sample_color, alpha=alphas)
             plt.title('step {}'.format(step))
         
@@ -117,7 +114,7 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
     logp = get_logp(distribution)
     mu0, var0 = initial_proposal(distribution)
 
-    hmc = HMC(dim=2, logp=logp, T=args.T,  L=args.L, chains=args.chains, chains_sksd=args.chains_sksd, mu0=mu0, var0=var0)
+    hmc = HMC(dim=2, logp=logp, T=args.T,  L=args.L, chains=args.chains, chains_sksd=args.chains_sksd, mu0=mu0, var0=var0, opt_proposal=True)
 
     hmc.optimizer = torch.optim.Adam(hmc.parameters(), lr=0.01)
 
@@ -130,13 +127,13 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
     for e in progress:
 
         # Sample 
-        z, chains = hmc.sample(mu0=hmc.mu0, var0=torch.exp(hmc.logvar0), chains=samples_per_step)
+        z, chains = hmc.sample(chains=samples_per_step)
         chains = chains[:, 0, :chains_per_step, :].reshape(hmc.T+1, chains_per_step, 2)
         z = z.reshape(samples_per_step, 2)
         alphas = np.linspace(0.1, 1, chains.shape[0])[::-1]
         for c in range(chains.shape[1]):
             for t in range(1,chains.shape[0]+1):
-                reset_axis(ax, e, mu0, var0, samples)
+                reset_axis(ax, e, hmc.mu0.detach().numpy(), torch.exp(hmc.logvar0 + 2*hmc.log_inflation).detach().numpy(), samples)
                 ax.plot(chains[:t,c,0].detach().numpy(), chains[:t,c,1].detach().numpy(), marker='o', color=chain_color, alpha=alphas[t-1])
                 plt.savefig('figs/chains/{}/{:05d}.png'.format(distribution, im))
                 im+=1
@@ -144,11 +141,10 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
             plt.savefig('figs/chains/{}/{:05d}.png'.format(distribution, im))
             im+=1
             samples.append(chains[-1, c])
-            reset_axis(ax, e, mu0, var0, samples)
+            reset_axis(ax, e, hmc.mu0.detach().numpy(), torch.exp(hmc.logvar0 + 2*hmc.log_inflation).detach().numpy(), samples)
             plt.savefig('figs/chains/{}/{:05d}.png'.format(distribution, im))
             im+=1
-        samples = samples + list(z)
-        hmc.optimizer.zero_grad()
+        #samples = samples + list(z)
 
         hmc.optimizer.zero_grad()
         z, _ = hmc.sample(hmc.mu0, torch.exp(hmc.logvar0), hmc.chains)
@@ -168,7 +164,7 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
         loss.append(_loss[torch.isfinite(_loss)].mean())
         objective.append(-_loss.mean())
         sksd.append(_sksd)
-    reset_axis(ax, e, mu0, var0, samples)
+    reset_axis(ax, e, hmc.mu0.detach().numpy(), torch.exp(hmc.logvar0 + 2*hmc.log_inflation).detach().numpy(),samples)
     ax.scatter(torch.stack(samples)[-samples_per_step:, 0].detach().numpy(), torch.stack(samples)[-samples_per_step:, 1].detach().numpy(), marker='*', color=sample_color, alpha=0.5)
     plt.title('step {}'.format(e))
     plt.savefig('figs/chains/{}/samples.pdf'.format(distribution, im))

@@ -45,6 +45,21 @@ def get_logp(name):
     return logp
 
 
+
+"""def get_dlogp(name):
+    if name == 'gaussian_mixture':
+        def dlogp(x):
+            P = torch.exp(get_logp('gaussian_mixture')(x))
+            num_modes = 7
+            angle = torch.arange(0, 2 * np.pi, 2 * np.pi / num_modes)
+            mu = torch.stack([torch.cos(angle), torch.sin(angle)], axis=0).reshape(1, -1, 2) * 5.0
+            zz = x[None,:].reshape((x.shape[1],1,2))
+            grad_x = torch.sum(torch.exp(-0.5*(torch.sum((zz-mu)**2,2)))* (zz-mu)[:,:,0],1)
+            grad_y = torch.sum(torch.exp(-0.5*(torch.sum((zz-mu)**2,2)))* (zz-mu)[:,:,1],1)
+            return torch.stack((-grad_x/P, -grad_y/P), -1)
+
+    return dlogp"""
+
 def plot_distribution(name):
     return 0
 
@@ -57,7 +72,8 @@ def initial_proposal(distribution):
 
     elif distribution=='wave':
         mu0 = torch.zeros([2])
-        var0 = torch.Tensor([5.5, 1])
+        #var0 = torch.Tensor([5.5, 1])
+        var0 = torch.Tensor([1, 1])
     
     return mu0, var0
 

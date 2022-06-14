@@ -1,7 +1,22 @@
 # HMC Tuning
 
-This repository contains a package for running HMC on Pytorch with automatic optimization of its hyperparameters. Rather than a single scalar, both step sizes $\mathbf{\epsilon}$ and momentum variances $\mathbf{M}$ are learned as matrices with dimensions $(T \times D)$ for efficiently exploring the density. For further details about the algorithm, see Section 3.5 of [our paper](https://arxiv.org/pdf/2202.04599.pdf), where we adapted the HMC tuning for a Hierarchical VAE. Original idea can be found [here](https://proceedings.mlr.press/v139/campbell21a.html). If you use this code, please consider citing both works.
+This repository contains a Python package for running HMC with Pytorch, including automatic optimization of its hyperparameters. You will be able to i) sample, by means of HMC, from any target distribution, given as a complex unnormalized target, and ii) automatically tune the HMC hyperparameters to improve the efficiency in exploring the density.
 
+The hyperparameters are:
+* Step sizes $\bm{\epsilon}$. Matrix with dims $(T,D)$. Different step sizes can be learned to be applied within each state of the chains.
+* Momentum variances, $M$. Matrix with dims $(T, D)$.
+* An inflation/scale parameter $\bm{s}$, that can be a scalar or a vector with dims $D$ so that different inflations can be applied per dimension.
+* If not defined, the Gaussian proposal parameters $\bm{\mu}$ and $\bm{\Sigma}$ can also be tuned.
+
+For further details about the algorithm, see Section 3.5 of [our paper](https://arxiv.org/pdf/2202.04599.pdf), where we adapted the HMC tuning for a Hierarchical VAE. Original idea can be found [here](https://proceedings.mlr.press/v139/campbell21a.html). If you refer to this algorithm, please consider citing both works. If you use this code, please cite:
+```
+@article{peis2022missing,
+  title={Missing Data Imputation and Acquisition with Deep Hierarchical Models and Hamiltonian Monte Carlo},
+  author={Peis, Ignacio and Ma, Chao and Hern{\'a}ndez-Lobato, Jos{\'e} Miguel},
+  journal={arXiv preprint arXiv:2202.04599},
+  year={2022}
+}
+```
 
 ## Instalation 
 The installation is straightforward using the following instruction, that creates a conda virtual environment named <code>HMCTuning</code> using the provided file <code>environment.yml</code>:
@@ -10,12 +25,24 @@ conda env create -f environment.yml
 ```
 
 ## Usage
-And HMC instance can be created using 
+In this section you can find details about the usage of the package. Some useful examples are included in <code>examples</code>. An HMC instance can be created using 
 ```
 hmc = HMC( dim, logp, T,  L, chains, chains_sksd, mu0, var0)
 ```
 where:
+* <code>dim</code> is the dimension of the target space.
+* <code>logp</code> is a <code>Callable</code> (function) that returns the probability $\log p(\bm{x})$ for an input $\bm{x}$.
+* <code>T</code> is the length if the chains.
+* <code>L</code> is the number of Leapfrog steps.
+* <code>chains</code> is the number of parallel chains used for each optimization step.
+* <code>chains_sksd</code> is the number of parallel chains used independently for computing the SKSD discrepancy within each optimization step.
 
+### Sampling
+For sampling from the HMC object, just call:
+```
+samples, chains = hmc.sample(mu0, var0, chains)
+```
+where <code>mu0</code> and <code>var0</code> are the initial proposal
 
 ### Training
 The project is developed in the recent research framework [PyTorch Lightning](https://www.pytorchlightning.ai/). The HH-VAEM model is implemented as a [<code>LightningModule</code>](https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html) that is trained by means of a [<code>Trainer</code>](https://pytorch-lightning.readthedocs.io/en/latest/common/trainer.html). A model can be trained by using:

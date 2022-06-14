@@ -35,7 +35,7 @@ parser.add_argument('--L', type=int, default=5,
                     help='number of Leapfrog steps within each state update')
 parser.add_argument('--cycles', type=int, default=2, 
                     help='number of times the cycle is repeated')
-parser.add_argument('--niters', type=int, default=50, 
+parser.add_argument('--niters', type=int, default=25, 
                     help='number of iters per cycles')           
 args = parser.parse_args()
 
@@ -104,22 +104,25 @@ def cyclic_proposal(distribution, cycles=10, niters=1000):
     niters = 100
     im=0    # Image number
     samples = []
-    for iter in tqdm(range(100)):
-        mu0, var0 = update_proposal(distribution,iter, niters)
-        hmc = HMC(dim=2, logp=logp, T=args.T,  L=args.L, chains=1, mu0=mu0, var0=var0)
 
-        # Sample 
-        z, chains = hmc.sample(mu0=hmc.mu0, var0=torch.exp(hmc.logvar0), chains=10)
-        samples.append(z)
-        alphas = np.linspace(0.1, 1, chains.shape[0])[::-1]
+    for cycle in range(args.cycles):
+        print('Building cycle {}'.format(cycle))
+        for iter in tqdm(range(100)):
+            mu0, var0 = update_proposal(distribution,iter, niters)
+            hmc = HMC(dim=2, logp=logp, T=args.T,  L=args.L, chains=1, mu0=mu0, var0=var0)
 
-        for t in range(1,chains.shape[0]+1):
-                reset_axis(ax, mu0, var0, samples)
-                ax.plot(chains[:t,0,0, 0].detach().numpy(), chains[:t,0,0, 1].detach().numpy(), marker='o', color=chain_color, alpha=alphas[t-1])
-                plt.savefig('figs/proposal/{}/{:05d}.png'.format(distribution, im))
-                im+=1
+            # Sample 
+            z, chains = hmc.sample(mu0=hmc.mu0, var0=torch.exp(hmc.logvar0), chains=10)
+            samples.append(z)
+            alphas = np.linspace(0.1, 1, chains.shape[0])[::-1]
 
-        reset_axis(ax, mu0, var0, samples)
+            for t in range(1,chains.shape[0]+1):
+                    reset_axis(ax, mu0, var0, samples)
+                    ax.plot(chains[:t,0,0, 0].detach().numpy(), chains[:t,0,0, 1].detach().numpy(), marker='o', color=chain_color, alpha=alphas[t-1])
+                    plt.savefig('figs/proposal/{}/{:05d}.png'.format(distribution, im))
+                    im+=1
+
+            reset_axis(ax, mu0, var0, samples)
 
     plt.savefig('figs/proposal/{}/samples.pdf'.format(distribution, im))
 
