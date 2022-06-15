@@ -18,7 +18,7 @@ class HMC(nn.Module):
     Implements an HMC sampler with trainable hyperparameters
     """
     def __init__(self, dim: int, logp: Callable, T: int=10,  L: int=5, chains: int=1, chains_sksd: int=30,
-                mu0: torch.Tensor=None, var0: torch.Tensor=None, opt_proposal=False, vector_scale=True):
+                mu0: torch.Tensor=None, var0: torch.Tensor=None, vector_scale=True):
         """
         HMC initialization
 
@@ -31,6 +31,7 @@ class HMC(nn.Module):
             chains_sksd (int, optional): number of parallel HMC chains for computing the SKSD. Defaults to 30.
             mu0 (torch.Tensor, optional): mean of the initial proposal. Defaults to None.
             var0 (torch.Tensor, optional): var of the initial proposal. Defaults to None.
+            vector_scale (bool, optional): learning a vector inflation (True) or a scalar (False). Defaults to None.
         """
         super().__init__()
 
@@ -40,7 +41,6 @@ class HMC(nn.Module):
         self.chains = chains      # Number of parallel chains
         self.chains_sksd = chains_sksd # Number of parallel chains for computing sksd
         self.logp = logp    # Function that computes objective logp
-        self.opt_proposal = opt_proposal    # Optimize proposal or not
         self.vector_scale = vector_scale    # Learn vector/scalar inflation parameter
 
         self.init_random_params(T, dim, mu0, var0)
@@ -67,14 +67,11 @@ class HMC(nn.Module):
             mu0 = torch.zeros([2])
         if var0==None:
             var0 = torch.ones([2])
-            
-        if not self.opt_proposal:
-            self.mu0 = mu0
-            self.logvar0 = torch.log(var0)
-        else:
-            self.mu0 = torch.nn.Parameter(mu0)
-            self.logvar0 = torch.nn.Parameter(torch.log(var0))
-            
+        
+        # Proposal can also be tuned but we see empirically that this is not stable
+        self.mu0 = mu0
+        self.logvar0 = torch.log(var0)
+
         # Scale (inflation) factor
         if self.vector_scale:
             self.log_inflation = torch.nn.Parameter(torch.zeros(2))
@@ -159,8 +156,8 @@ class HMC(nn.Module):
             mu0 = self.mu0.data.detach()
         if var0==None:
             var0 = var0 = torch.exp(self.logvar0).data.detach()
-        sigma0 = torch.sqrt(var0).data.detach()
-        mu0 = mu0.data.detach()
+        sigma0 = torch.sqrt(var0)
+        mu0 = mu0
         log_inflation = self.log_inflation # same scale per all dimension
         inflation = torch.exp(log_inflation)
 

@@ -7,6 +7,7 @@
 
 from src.hmc import *
 import torch.distributions as D
+import matplotlib.pyplot as plt
 
 def get_logp(name):
 
@@ -35,33 +36,46 @@ def get_logp(name):
             return -term1 + term2     
 
     elif name == 'wave':
-        # wave2
+        # wave
         def logp(x):
             x0 = x[0,:,0]
             x1 = x[0,:,1]
             term1 = torch.exp(-0.5* ((x1 + torch.sin(0.5*np.pi* x0))/0.35)**2)
             term2 = torch.exp(-0.5* ((-x1 - torch.sin(0.5*np.pi* x0) + 3*torch.exp(-0.5/0.36* (x0-1)**2))/0.35)**2)
-            return torch.log(1e-300+ term1 + term2)        
+            logp = torch.log(1e-300+ term1 + term2)   
+            if not logp.sum().isfinite():
+                print('stop')
+            return logp
     return logp
 
+def plot_density(name, ax):
+    logp = get_logp(name)
+    xmin, xmax, ymin, ymax = get_grid_lims(name)
+    x1grid = np.linspace(xmin, xmax, 1000)
+    x2grid = np.linspace(ymin, ymax, 1000)
+
+    X1, X2 = np.meshgrid(x1grid, x2grid)
+    # Pack X and Y into a single 3-dimensional array
+    X = np.empty(X1.shape + (2,))
+    X[:, :, 0] = X1
+    X[:, :, 1] = X2
+    p = logp(torch.Tensor(X)).unsqueeze(-1)
+    ax.contourf(X1, X2, p, cmap = plt.cm.Blues, alpha=0.5)
 
 
-"""def get_dlogp(name):
-    if name == 'gaussian_mixture':
-        def dlogp(x):
-            P = torch.exp(get_logp('gaussian_mixture')(x))
-            num_modes = 7
-            angle = torch.arange(0, 2 * np.pi, 2 * np.pi / num_modes)
-            mu = torch.stack([torch.cos(angle), torch.sin(angle)], axis=0).reshape(1, -1, 2) * 5.0
-            zz = x[None,:].reshape((x.shape[1],1,2))
-            grad_x = torch.sum(torch.exp(-0.5*(torch.sum((zz-mu)**2,2)))* (zz-mu)[:,:,0],1)
-            grad_y = torch.sum(torch.exp(-0.5*(torch.sum((zz-mu)**2,2)))* (zz-mu)[:,:,1],1)
-            return torch.stack((-grad_x/P, -grad_y/P), -1)
-
-    return dlogp"""
-
-def plot_distribution(name):
-    return 0
+def get_grid_lims(distribution):
+    if distribution=='gaussian_mixture':
+        xmin = -1.3
+        xmax = 1.3
+        ymin = -1.3
+        ymax = 1.3
+            
+    elif distribution=='wave':
+        xmin = -10
+        xmax = 10
+        ymin = -10
+        ymax = 10
+    return xmin, xmax, ymin, ymax
 
 
 def initial_proposal(distribution):

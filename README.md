@@ -6,9 +6,8 @@ The hyperparameters are:
 * Step sizes $\mathbf{\epsilon}$. Matrix with dims $(T,D)$. Different step sizes can be learned to be applied within each state of the chains.
 * Momentum variances, $M$. Matrix with dims $(T, D)$.
 * An inflation/scale parameter $\mathbf{s}$, that can be a scalar or a vector with dims $D$ so that different inflations can be applied per dimension.
-* You can choose to tune the Gaussian proposal parameters $\mathbf{\mu}$ and $\mathbf{\Sigma}$ or fix them.
 
-For further details about the algorithm, see Section 3.5 of [our paper](https://arxiv.org/pdf/2202.04599.pdf), where we adapted the HMC tuning for a Hierarchical VAE. Original idea can be found [here](https://proceedings.mlr.press/v139/campbell21a.html). If you refer to this algorithm, please consider citing both works. If you use this code, please cite:
+For further details about the algorithm, see Section 3.5 of [our paper](https://arxiv.org/pdf/2202.04599.pdf), where we adapted the HMC tuning for a Hierarchical VAE with mixed-type partial data. Original idea can be found [here](https://proceedings.mlr.press/v139/campbell21a.html). If you refer to this algorithm, please consider citing both works. If you use this code, please cite:
 ```
 @article{peis2022missing,
   title={Missing Data Imputation and Acquisition with Deep Hierarchical Models and Hamiltonian Monte Carlo},
@@ -25,17 +24,31 @@ conda env create -f environment.yml
 ```
 
 ## Usage
-In this section you can find details about the usage of the package. Some useful examples are included in <code>examples</code>. An HMC instance can be created using 
+If you want a detailed example, check [<code>notebooks/usage.ipynb</code>](notebooks/usage.ipynb). For a basic usage, continue reading here. An HMC object can be created with:
 ```
-hmc = HMC( dim, logp, T,  L, chains, chains_sksd, mu0, var0, opt_proposal, vector_scale)
+hmc = HMC( dim, logp, T,  L, chains, chains_sksd, mu0, var0, vector_scale)
 ```
 where:
-* <code>dim</code> is the dimension of the target space.
-* <code>logp</code> is a <code>Callable</code> (function) that returns the probability $\log p(\mathbf{x})$ for an input $\mathbf{x}$.
-* <code>T</code> is the length if the chains.
-* <code>L</code> is the number of Leapfrog steps.
-* <code>chains</code> is the number of parallel chains used for each optimization step.
-* <code>chains_sksd</code> is the number of parallel chains used independently for computing the SKSD discrepancy within each optimization step.
+* <code>dim</code> is an <code>int</code> with the dimension of the target space.
+* <code>logp</code> is a <code>Callable</code> (function) that returns the log probability $\log p(\mathbf{x})$ for an input $\mathbf{x}$.
+* <code>T</code> is an <code>int</code> with the length if the chains.
+* <code>L</code> is an <code>int</code> with the number of Leapfrog steps.
+* <code>chains</code> is an <code>int</code> with the number of parallel chains used for each optimization step.
+* <code>chains_sksd</code> is an <code>int</code> with the number of parallel chains used independently for computing the SKSD discrepancy within each optimization step.
+* <code>mu0</code> is a <code>(bath_size, D)</code> tensor with the means of the Gaussian initial proposal.
+* <code>var0</code> is a <code>(bath_size, D)</code> tensor with the variances of the Gaussian initial proposal.
+
+Here you can see an example for a Mixture of Gaussians with 8 components, without tuning the proposal:
+```
+from examples.distributions import *
+from examples.utils import *
+
+logp = get_logp('gaussian_mixture')
+mu, var0 = get_proposal('gaussian_mixture')   # [0, 0],  [0.01, 0.01]
+
+hmc = HMC(dim=2, logp=logp, T=5,  L=5, chains=1000, chains_sksd=30, mu0=mu0, var0=var0, opt_proposal=False, vector_scale=True)
+```
+
 
 ### Sampling
 For sampling from the HMC object, just call:
@@ -45,19 +58,13 @@ samples, chains = hmc.sample(mu0, var0, chains)
 where <code>mu0</code> and <code>var0</code> are the initial proposal
 
 ### Training
-The project is developed in the recent research framework [PyTorch Lightning](https://www.pytorchlightning.ai/). The HH-VAEM model is implemented as a [<code>LightningModule</code>](https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html) that is trained by means of a [<code>Trainer</code>](https://pytorch-lightning.readthedocs.io/en/latest/common/trainer.html). A model can be trained by using:
+To train the HMC hyperparameters, just call:
 ```
-# Example for training HH-VAEM on Boston dataset
-python train.py --model HHVAEM --dataset boston --split 0
+hmc.fit()
 ```
-This will automatically download the <code>boston</code> dataset, split in 10 train/test splits and train HH-VAEM on the training split <code>0</code>. Two folders will be created: <code>data/</code> for storing the datasets and <code>logs/</code> for model checkpoints and [TensorBoard](https://www.tensorflow.org/tensorboard) logs. The variable <code>LOGDIR</code> can be modified in <code>src/configs.py</code> to change the directory where these folders will be created (this might be useful for avoiding overloads in network file systems).
 
-The following datasets are available:
-- A total of 10 UCI datasets: <code>avocado</code>, <code>boston</code>, <code>energy</code>, <code>wine</code>, <code>diabetes</code>, <code>concrete</code>, <code>naval</code>, <code>yatch</code>, <code>bank</code> or <code>insurance</code>.
-- The MNIST datasets: <code>mnist</code> or <code>fashion_mnist</code>.
-- More datasets can be easily added to <code>src/datasets.py</code>.
- 
-For each dataset, the corresponding parameter configuration must be added to <code>src/configs.py</code>.
+
+
 
 The following models are also available (implemented in <code>src/models/</code>):
 - <code>HHVAEM</code>: the proposed model in the paper.
