@@ -25,7 +25,7 @@ from utils import *
 
 parser = argparse.ArgumentParser(description='Train the hyperparameters of HMC using Variational Inference')
 
-parser.add_argument('--distribution', type=str, default='wave', 
+parser.add_argument('--distribution', type=str, default='gaussian_mixture', 
                     help='name of the distribution (from srd/distributions.py)')
 parser.add_argument('--T', type=int, default=5, 
                     help='length of the HMC chains (number of states)')
@@ -56,12 +56,14 @@ if not os.path.isdir('./figs/training/{}'.format(args.distribution)):
 def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
     
     f = plt.figure(constrained_layout=True)
-    gs = f.add_gridspec(ncols=8, nrows=2)
+    gs = f.add_gridspec(ncols=9, nrows=2)
     ax = []
     ax.append(f.add_subplot(gs[0, :4]))     # Samples
-    ax.append(f.add_subplot(gs[0, 4:]))    # Objective
-    ax.append(f.add_subplot(gs[1, 4:]))    # SKSD
-    ax.append(f.add_subplot(gs[1, :4]))    # Inflation
+    ax.append(f.add_subplot(gs[0, 4:8]))    # Objective
+    ax.append(f.add_subplot(gs[1, 4:8]))    # SKSD
+    ax.append(f.add_subplot(gs[1, :4]))     # Inflation
+    ax.append(f.add_subplot(gs[:, 8]))      # Step sizes
+
 
     plot_density(distribution, ax[0])
     ax[1].set_title(r'$\log p(x)$')
@@ -105,8 +107,17 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
     mu0, var0 = initial_proposal(distribution)
 
     hmc = HMC(dim=2, logp=logp, T=args.T,  L=args.L, chains=samples_per_step, chains_sksd=args.chains_sksd, mu0=mu0, var0=var0, vector_scale=True)
+    
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-    hmc.optimizer = torch.optim.Adam(hmc.parameters(), lr=0.001)
+    divider = make_axes_locatable(ax[4])
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    
+    
+    sh = ax[4].imshow(torch.exp(hmc.log_eps).detach().numpy(), cmap=plt.cm.Blues)
+    plt.colorbar(sh, cax=cax)
+
+    hmc.optimizer = torch.optim.Adam(hmc.parameters(), lr=0.01)
     optimizer_scale = torch.optim.Adam([hmc.log_inflation], lr=0.1)
 
     loss=[]
@@ -126,14 +137,14 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
             for t in range(1,chains.shape[0]+1):
                 reset_axis(ax[0], e, hmc.mu0.detach().numpy(), torch.exp(hmc.logvar0 + 2*hmc.log_inflation).detach().numpy(), samples)
                 ax[0].plot(chains[:t,c,0].detach().numpy(), chains[:t,c,1].detach().numpy(), marker='o', color=chain_color, alpha=alphas[t-1])
-                plt.savefig('figs/training/{}/{:05d}.png'.format(distribution, im))
+                plt.savefig('figs/training/{}/{:05d}.png'.format(distribution, im), bbox_inches='tight')
                 im+=1
             ax[0].plot(chains[-1, c, 0].detach().numpy(), chains[-1, c, 1].detach().numpy(), marker='*', color=sample_color)
-            plt.savefig('figs/training/{}/{:05d}.png'.format(distribution, im))
+            plt.savefig('figs/training/{}/{:05d}.png'.format(distribution, im), bbox_inches='tight')
             im+=1
             samples.append(chains[-1, c])
             reset_axis(ax[0], e, hmc.mu0.detach().numpy(), torch.exp(hmc.logvar0 + 2*hmc.log_inflation).detach().numpy(), samples)
-            plt.savefig('figs/training/{}/{:05d}.png'.format(distribution, im))
+            plt.savefig('figs/training/{}/{:05d}.png'.format(distribution, im), bbox_inches='tight')
             im+=1
         #samples = samples + list(z)
 
@@ -143,6 +154,9 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
 
         _loss[torch.isfinite(_loss)].sum().backward()
         hmc.optimizer.step()
+
+        sh = ax[4].imshow(torch.exp(hmc.log_eps).detach().numpy(), cmap=plt.cm.Blues)
+        plt.colorbar(sh, cax=cax)
 
         hmc.optimizer.zero_grad()
         _sksd = hmc.evaluate_sksd(hmc.mu0, torch.exp(hmc.logvar0))
@@ -167,9 +181,9 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
         ax[3].legend([r'$s_{}$'.format(i) for i in range(2)])
         ax[3].set_title(r'$Inflation$')
 
-    reset_axis(ax, e, hmc.mu0.detach().numpy(), torch.exp(hmc.logvar0 + 2*hmc.log_inflation).detach().numpy(),samples)
-    ax.scatter(torch.stack(samples)[-samples_per_step:, 0].detach().numpy(), torch.stack(samples)[-samples_per_step:, 1].detach().numpy(), marker='*', color=sample_color, alpha=0.5)
-    plt.savefig('figs/training/{}/samples.pdf'.format(distribution, im))
+    reset_axis(ax[0], e, hmc.mu0.detach().numpy(), torch.exp(hmc.logvar0 + 2*hmc.log_inflation).detach().numpy(),samples)
+    ax[0].scatter(torch.stack(samples)[-samples_per_step:, 0].detach().numpy(), torch.stack(samples)[-samples_per_step:, 1].detach().numpy(), marker='*', color=sample_color, alpha=0.5)
+    plt.savefig('figs/training/{}/samples.pdf'.format(distribution, im), bbox_inches='tight')
 
 if __name__ == '__main__':
 

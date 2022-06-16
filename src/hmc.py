@@ -103,7 +103,7 @@ class HMC(nn.Module):
             var0 = torch.exp(self.logvar0)
             
         sigma0 = torch.sqrt(var0)
-        log_inflation = self.log_inflation.data.detach() # same scale per all dimension
+        log_inflation = self.log_inflation.data.detach()
         inflation = torch.exp(log_inflation).data.detach()
         # Learn a scale as a global factor
         if chains==None:

@@ -83,7 +83,6 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
             y = samples[:, 1]
             alphas = np.linspace(0, 1, len(x))
             ax.scatter(x, y, marker='*', color=sample_color, alpha=alphas)
-            plt.title('step {}'.format(step))
         
         plt.xlim(xmin, xmax) 
         plt.ylim(ymin, ymax) 
@@ -125,28 +124,8 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
             im+=1
         #samples = samples + list(z)
 
-        hmc.optimizer.zero_grad()
-        z, _ = hmc.sample(hmc.mu0, torch.exp(hmc.logvar0), hmc.chains)
-        _loss = -hmc.logp(z)
-
-        _loss[torch.isfinite(_loss)].sum().backward()
-        hmc.optimizer.step()
-
-        hmc.optimizer.zero_grad()
-        _sksd = hmc.evaluate_sksd(hmc.mu0, torch.exp(hmc.logvar0))
-        # For some densities the _sksd might be ill
-        if not _sksd.isnan():
-            _sksd.backward()
-            optimizer_scale.step()
-
-        progress.set_description('HMC (objective=%g)' % -_loss[torch.isfinite(_loss)].mean().detach().numpy())
-
-        loss.append(_loss[torch.isfinite(_loss)].mean())
-        objective.append(-_loss.mean())
-        sksd.append(_sksd)
     reset_axis(ax, e, hmc.mu0.detach().numpy(), torch.exp(hmc.logvar0 + 2*hmc.log_inflation).detach().numpy(),samples)
     ax.scatter(torch.stack(samples)[-samples_per_step:, 0].detach().numpy(), torch.stack(samples)[-samples_per_step:, 1].detach().numpy(), marker='*', color=sample_color, alpha=0.5)
-    plt.title('step {}'.format(e))
     plt.savefig('figs/chains/{}/samples.pdf'.format(distribution, im))
 
 if __name__ == '__main__':

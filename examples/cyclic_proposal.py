@@ -27,7 +27,7 @@ from utils import *
 
 parser = argparse.ArgumentParser(description='Train the hyperparameters of HMC using Variational Inference')
 
-parser.add_argument('--distribution', type=str, default='gaussian_mixture', 
+parser.add_argument('--distribution', type=str, default='wave', 
                     help='name of the distribution (from srd/distributions.py)')
 parser.add_argument('--T', type=int, default=5, 
                     help='length of the HMC chains (number of states)')
@@ -40,8 +40,8 @@ parser.add_argument('--niters', type=int, default=25,
 args = parser.parse_args()
 
 
-if not os.path.isdir('./figs/proposal/{}'.format(args.distribution)):
-    os.makedirs('./figs/proposal/{}'.format(args.distribution))
+if not os.path.isdir('./figs/cycle/{}'.format(args.distribution)):
+    os.makedirs('./figs/cycle/{}'.format(args.distribution))
 
 def cyclic_proposal(distribution, cycles=10, niters=1000):
     
@@ -70,6 +70,7 @@ def cyclic_proposal(distribution, cycles=10, niters=1000):
         # Dual moon
         #plt.xlim(-2, 2) 
         #plt.ylim(-2, 2) 
+        plot_density(distribution, ax)
         
         if distribution=='gaussian_mixture':
             xmin = -1.3
@@ -119,12 +120,12 @@ def cyclic_proposal(distribution, cycles=10, niters=1000):
             for t in range(1,chains.shape[0]+1):
                     reset_axis(ax, mu0, var0, samples)
                     ax.plot(chains[:t,0,0, 0].detach().numpy(), chains[:t,0,0, 1].detach().numpy(), marker='o', color=chain_color, alpha=alphas[t-1])
-                    plt.savefig('figs/proposal/{}/{:05d}.png'.format(distribution, im))
+                    plt.savefig('figs/cycle/{}/{:05d}.png'.format(distribution, im))
                     im+=1
 
             reset_axis(ax, mu0, var0, samples)
 
-    plt.savefig('figs/proposal/{}/samples.pdf'.format(distribution, im))
+    plt.savefig('figs/cycle/{}/samples.pdf'.format(distribution, im))
 
 
 
@@ -139,6 +140,6 @@ if __name__ == '__main__':
 
     cyclic_proposal(args.distribution, args.cycles, args.niters)
 
-    make_gif('figs/proposal/{}/'.format(args.distribution))
+    make_gif('figs/cycle/{}/'.format(args.distribution))
 
 
