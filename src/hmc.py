@@ -153,9 +153,9 @@ class HMC(nn.Module):
         #log_v_r = self.log_v_r.data
         log_v_r = self.log_v_r.data.detach()
         if mu0==None:
-            mu0 = self.mu0.data.detach()
+            mu0 = self.mu0
         if var0==None:
-            var0 = var0 = torch.exp(self.logvar0).data.detach()
+            var0 = var0 = torch.exp(self.logvar0)
         sigma0 = torch.sqrt(var0)
         mu0 = mu0
         log_inflation = self.log_inflation # same scale per all dimension

@@ -75,7 +75,8 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
         ygrid = np.linspace(ymin, ymax, 1000)
 
         plot_bi_gaussian(mu0, var0, xgrid, ygrid, ax)
-
+        plot_density(distribution, ax)
+        
         if len(samples) != 0:
             samples = torch.stack(samples).detach().numpy().reshape(-1, 2)
             x = samples[:, 0]
@@ -94,6 +95,7 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
     hmc = HMC(dim=2, logp=logp, T=args.T,  L=args.L, chains=args.chains, chains_sksd=args.chains_sksd, mu0=mu0, var0=var0)
 
     hmc.optimizer = torch.optim.Adam(hmc.parameters(), lr=0.01)
+    optimizer_scale = torch.optim.Adam([hmc.log_inflation], lr=0.1)
 
     loss=[]
     objective=[]
@@ -132,9 +134,10 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
 
         hmc.optimizer.zero_grad()
         _sksd = hmc.evaluate_sksd(hmc.mu0, torch.exp(hmc.logvar0))
-        _sksd.backward()
-        hmc.optimizer.step()
-
+        # For some densities the _sksd might be ill
+        if not _sksd.isnan():
+            _sksd.backward()
+            optimizer_scale.step()
 
         progress.set_description('HMC (objective=%g)' % -_loss[torch.isfinite(_loss)].mean().detach().numpy())
 
@@ -155,7 +158,7 @@ if __name__ == '__main__':
     #mu0 = torch.zeros(1, 2)
     #var0 = torch.ones(1, 2)*0.1
 
-    plot_chains(args.distribution, args.steps, samples_per_step=1000, chains_per_step=3)
+    plot_chains(args.distribution, args.steps, samples_per_step=args.chains, chains_per_step=3)
 
     make_gif('figs/chains/{}/'.format(args.distribution))
 

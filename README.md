@@ -43,6 +43,7 @@ Here you can see an example for a Mixture of Gaussians with 8 components, withou
 from examples.distributions import *
 from examples.utils import *
 
+# Load the log probability function of MoG, and the initial proposal
 logp = get_logp('gaussian_mixture')
 mu, var0 = get_proposal('gaussian_mixture')   # [0, 0],  [0.01, 0.01]
 
@@ -53,9 +54,9 @@ hmc = HMC(dim=2, logp=logp, T=5,  L=5, chains=1000, chains_sksd=30, mu0=mu0, var
 ### Sampling
 For sampling from the HMC object, just call:
 ```
-samples, chains = hmc.sample(mu0, var0, chains)
+samples, chains = hmc.sample(chains, mu0, var0)
 ```
-where <code>mu0</code> and <code>var0</code> are the initial proposal
+The parameters <code>mu0</code> and <code>var0</code> are optional if you already passed them when initializing.
 
 ### Training
 To train the HMC hyperparameters, just call:

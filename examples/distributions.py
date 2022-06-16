@@ -19,7 +19,7 @@ def get_logp(name):
     elif name == 'gaussian_mixture':
         K=8     # Number of components
         means = torch.Tensor([[np.cos(k * np.pi/4), np.sin(k * np.pi/4)] for k in range(K)])
-        vars = torch.Tensor([[0.12, 0.12] for k in range(K)])
+        vars = torch.Tensor([[0.15, 0.15] for k in range(K)])
         mix = D.Categorical(torch.ones(K))
         comp = D.Independent(D.Normal(
             means, vars), 1)
@@ -38,13 +38,11 @@ def get_logp(name):
     elif name == 'wave':
         # wave
         def logp(x):
-            x0 = x[0,:,0]
-            x1 = x[0,:,1]
+            x0 = x[...,:,0]
+            x1 = x[...,:,1]
             term1 = torch.exp(-0.5* ((x1 + torch.sin(0.5*np.pi* x0))/0.35)**2)
             term2 = torch.exp(-0.5* ((-x1 - torch.sin(0.5*np.pi* x0) + 3*torch.exp(-0.5/0.36* (x0-1)**2))/0.35)**2)
             logp = torch.log(1e-300+ term1 + term2)   
-            if not logp.sum().isfinite():
-                print('stop')
             return logp
     return logp
 
@@ -59,8 +57,11 @@ def plot_density(name, ax):
     X = np.empty(X1.shape + (2,))
     X[:, :, 0] = X1
     X[:, :, 1] = X2
-    p = logp(torch.Tensor(X)).unsqueeze(-1)
-    ax.contourf(X1, X2, p, cmap = plt.cm.Blues, alpha=0.5)
+    p = torch.exp(logp(torch.Tensor(X)))
+    cm = plt.cm.Blues
+    cm.set_under(color='w')
+    ax.contourf(X1, X2, p, cmap = cm, alpha=0.5)
+    ax.set_facecolor('white')
 
 
 def get_grid_lims(distribution):

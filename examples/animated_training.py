@@ -31,11 +31,11 @@ parser.add_argument('--T', type=int, default=5,
                     help='length of the HMC chains (number of states)')
 parser.add_argument('--L', type=int, default=5, 
                     help='number of Leapfrog steps within each state update')
-parser.add_argument('--chains', type=int, default=1000, 
+parser.add_argument('--chains', type=int, default=100, 
                     help='number of parallel chains (n. of HMC samples)')
 parser.add_argument('--chains_sksd', type=int, default=30, 
                     help='number of parallel chains for computing the SKSD')      
-parser.add_argument('--steps', type=int, default=200, 
+parser.add_argument('--steps', type=int, default=100, 
                     help='number of training steps')           
 parser.add_argument('--gpu', type=int, default=1,
                     help='use gpu via cuda (1) or cpu (0)')
@@ -56,14 +56,13 @@ if not os.path.isdir('./figs/training/{}'.format(args.distribution)):
 def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
     
     f = plt.figure(constrained_layout=True)
-    gs = f.add_gridspec(ncols=7, nrows=6)
+    gs = f.add_gridspec(ncols=8, nrows=2)
     ax = []
-    ax.append(f.add_subplot(gs[:3, :4]))     # True distribution
-    ax.append(f.add_subplot(gs[3:, :4]))     # Samples
-    ax.append(f.add_subplot(gs[:2, 4:7]))    # Objective
-    ax.append(f.add_subplot(gs[:4, 4:7]))    # SKSD
-    ax.append(f.add_subplot(gs[:6, 4:7]))    # Inflation
-    ax[0].set_title(r'$True p(x)$')
+    ax.append(f.add_subplot(gs[0, :4]))     # Samples
+    ax.append(f.add_subplot(gs[0, 4:]))    # Objective
+    ax.append(f.add_subplot(gs[1, 4:]))    # SKSD
+    ax.append(f.add_subplot(gs[1, :4]))    # Inflation
+
     plot_density(distribution, ax[0])
     ax[1].set_title(r'$\log p(x)$')
     ax[2].set_title(r'$SKSD$')
@@ -71,14 +70,17 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
 
     chain_color='gray'
     sample_color='tab:green'
-    ax[1].axis('off')
+    ax[0].axis('off')
  
     xmin, xmax, ymin, ymax = get_grid_lims(distribution)   
-    ax[1].set_xlim(xmin, xmax) 
-    ax[1].set_ylim(ymin, ymax) 
+    ax[0].set_xlim(xmin, xmax) 
+    ax[0].set_ylim(ymin, ymax) 
     
     def reset_axis(ax, step, mu0, var0, samples=None,):
         ax.clear()
+
+        plot_density(distribution, ax)
+
         ax.axis('off')
 
     
@@ -102,9 +104,10 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
     logp = get_logp(distribution)
     mu0, var0 = initial_proposal(distribution)
 
-    hmc = HMC(dim=2, logp=logp, T=args.T,  L=args.L, chains=args.chains, chains_sksd=args.chains_sksd, mu0=mu0, var0=var0, vector_scale=True)
+    hmc = HMC(dim=2, logp=logp, T=args.T,  L=args.L, chains=samples_per_step, chains_sksd=args.chains_sksd, mu0=mu0, var0=var0, vector_scale=True)
 
-    hmc.optimizer = torch.optim.Adam(hmc.parameters(), lr=0.01)
+    hmc.optimizer = torch.optim.Adam(hmc.parameters(), lr=0.001)
+    optimizer_scale = torch.optim.Adam([hmc.log_inflation], lr=0.1)
 
     loss=[]
     objective=[]
@@ -118,19 +121,18 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
         # Sample 
         z, chains = hmc.sample(chains=samples_per_step)
         chains = chains[:, 0, :chains_per_step, :].reshape(hmc.T+1, chains_per_step, 2)
-        z = z.reshape(samples_per_step, 2)
         alphas = np.linspace(0.1, 1, chains.shape[0])[::-1]
         for c in range(chains.shape[1]):
             for t in range(1,chains.shape[0]+1):
-                reset_axis(ax[1], e, hmc.mu0.detach().numpy(), torch.exp(hmc.logvar0 + 2*hmc.log_inflation).detach().numpy(), samples)
-                ax[1].plot(chains[:t,c,0].detach().numpy(), chains[:t,c,1].detach().numpy(), marker='o', color=chain_color, alpha=alphas[t-1])
+                reset_axis(ax[0], e, hmc.mu0.detach().numpy(), torch.exp(hmc.logvar0 + 2*hmc.log_inflation).detach().numpy(), samples)
+                ax[0].plot(chains[:t,c,0].detach().numpy(), chains[:t,c,1].detach().numpy(), marker='o', color=chain_color, alpha=alphas[t-1])
                 plt.savefig('figs/training/{}/{:05d}.png'.format(distribution, im))
                 im+=1
-            ax[1].plot(chains[-1, c, 0].detach().numpy(), chains[-1, c, 1].detach().numpy(), marker='*', color=sample_color)
+            ax[0].plot(chains[-1, c, 0].detach().numpy(), chains[-1, c, 1].detach().numpy(), marker='*', color=sample_color)
             plt.savefig('figs/training/{}/{:05d}.png'.format(distribution, im))
             im+=1
             samples.append(chains[-1, c])
-            reset_axis(ax[1], e, hmc.mu0.detach().numpy(), torch.exp(hmc.logvar0 + 2*hmc.log_inflation).detach().numpy(), samples)
+            reset_axis(ax[0], e, hmc.mu0.detach().numpy(), torch.exp(hmc.logvar0 + 2*hmc.log_inflation).detach().numpy(), samples)
             plt.savefig('figs/training/{}/{:05d}.png'.format(distribution, im))
             im+=1
         #samples = samples + list(z)
@@ -144,9 +146,11 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
 
         hmc.optimizer.zero_grad()
         _sksd = hmc.evaluate_sksd(hmc.mu0, torch.exp(hmc.logvar0))
-        _sksd.backward()
-        hmc.optimizer.step()
-
+        
+        # For some densities the _sksd might be ill
+        if not _sksd.isnan():
+            _sksd.backward()
+            optimizer_scale.step()
 
         progress.set_description('HMC (objective=%g)' % -_loss[torch.isfinite(_loss)].mean().detach().numpy())
 
@@ -176,7 +180,7 @@ if __name__ == '__main__':
     #mu0 = torch.zeros(1, 2)
     #var0 = torch.ones(1, 2)*0.1
 
-    plot_chains(args.distribution, args.steps, samples_per_step=1000, chains_per_step=3)
+    plot_chains(args.distribution, args.steps, samples_per_step=args.chains, chains_per_step=3)
 
     make_gif('figs/training/{}/'.format(args.distribution))
 

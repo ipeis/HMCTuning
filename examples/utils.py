@@ -28,7 +28,8 @@ def plot_bi_gaussian(mu, Sigma, x1grid, x2grid, ax):
     X[:, :, 0] = X1
     X[:, :, 1] = X2
     p = mnormal.pdf(X, mu.squeeze(), Sigma)
-    ax.contour(X1, X2, p, cmap = plt.cm.Blues, alpha=0.5)
+    ax.contour(X1, X2, p, cmap = plt.cm.Blues, alpha=0.3)
+    
 
 
 
