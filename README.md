@@ -58,7 +58,7 @@ This will run the gradient-based optimization algorithm that tunes the hyperpara
 
 ### Example
 
-In the following gif you can see how effective is the training algorithm. Horizontal scaling is automatically adjusted to inflate the proposal for covering the density. Step sizes matrix are showed with color scale at the right. Ovjective and SKSD are included.
+In the following gif you can see how effective is the training algorithm. Horizontal scaling is automatically adjusted to inflate the proposal for covering the density. Step sizes matrix are showed with color scale at the right. Objective and SKSD are included.
 
 ![Alt Text](assets/gifs/training_wave.gif)
 
