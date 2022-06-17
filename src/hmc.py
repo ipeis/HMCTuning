@@ -297,12 +297,12 @@ class HMC(nn.Module):
             steps (int, optional): Number of epochs. Defaults to 20.
         """
 
-        self.optimizer = torch.optim.Adam(self.parameters(), lr=0.001)
+        self.optimizer = torch.optim.Adam([self.log_eps] + [self.log_v_r], lr=0.001)
         self.scale_optimizer = torch.optim.Adam([self.log_inflation], lr=0.1)
 
-        loss=[]
-        objective=[]
-        sksd=[]
+        self.loss=[]
+        self.objective=[]
+        self.sksd=[]
         t = trange(steps, desc='Loss')
         for e in t:
             self.optimizer.zero_grad()
@@ -314,17 +314,22 @@ class HMC(nn.Module):
             if _loss.isfinite():
                 _loss.backward()
                 self.optimizer.step()
-                loss.append(_loss)
-                objective.append(-_loss)
+                self.loss.append(_loss.detach().numpy())
+                self.objective.append(-_loss.detach().numpy())
+            else:
+                self.loss.append(self.loss[-1].detach().numpy())
+                self.objective.append(-self.loss[-1].detach().numpy())
 
             self.scale_optimizer.zero_grad()
             _sksd = self.evaluate_sksd(self.mu0, torch.exp(self.logvar0))
             if _sksd.isfinite():
                 _sksd.backward()
                 self.scale_optimizer.step()
-                sksd.append(_sksd)
+                self.sksd.append(_sksd.detach().numpy())
+            else:
+                self.sksd.append(self.sksd[-1].detach().numpy())
 
-            t.set_description('HMC (objective=%g)' % objective[-1].detach().numpy())
+            t.set_description('HMC (objective=%g)' % self.objective[-1])
 
 
     def evaluate_ksd(self, mu0: torch.Tensor, var0: torch.Tensor) -> torch.Tensor:
