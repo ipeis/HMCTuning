@@ -327,7 +327,7 @@ class HMC(nn.Module):
                 self.scale_optimizer.step()
                 self.sksd.append(_sksd.detach().numpy())
             else:
-                self.sksd.append(self.sksd[-1].detach().numpy())
+                self.sksd.append(self.sksd[-1])
 
             t.set_description('HMC (objective=%g)' % self.objective[-1])
 
