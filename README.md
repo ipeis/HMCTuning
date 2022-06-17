@@ -2,7 +2,7 @@
 
 This repository contains a Python package for running HMC with Pytorch, including automatic optimization of its hyperparameters. You will be able to i) sample from any target distribution, given as a unnormalized target, and ii) automatically tune the HMC hyperparameters to improve the efficiency in exploring the density.
 
-For further details about the algorithm, see Section 3.5 of [our paper](https://arxiv.org/pdf/2202.04599.pdf), where we adapted the HMC tuning for improving a  Hierarchical VAE for mixed-type partial data. Original idea can be found [here](https://proceedings.mlr.press/v139/campbell21a.html). If you refer to this algorithm, please consider citing both works. If you use this code, please cite:
+For further details about the algorithm, see Section 3.5 of [our paper](https://arxiv.org/pdf/2202.04599.pdf), where we adapted the HMC tuning for improving a  Hierarchical VAE for mixed-type partial data. Original optimization idea can be found [here](https://proceedings.mlr.press/v139/campbell21a.html). If you refer to this algorithm, please consider citing both works. If you use this code, please cite:
 ```
 @article{peis2022missing,
   title={Missing Data Imputation and Acquisition with Deep Hierarchical Models and Hamiltonian Monte Carlo},
@@ -26,9 +26,10 @@ from examples.utils import *
 
 # Load the log probability function of MoG, and the initial proposal
 logp = get_logp('gaussian_mixture')
-mu, var0 = get_proposal('gaussian_mixture')   # [0, 0],  [0.01, 0.01]
+mu0, var0 = initial_proposal('gaussian_mixture')   # [0, 0],  [0.01, 0.01]
 
-hmc = HMC(dim=2, logp=logp, T=5,  L=5, chains=1000, chains_sksd=30, mu0=mu0, var0=var0, opt_proposal=False, vector_scale=True)
+# Create the HMC object
+hmc = HMC(dim=2, logp=logp, T=5,  L=5, chains=1000, chains_sksd=30, mu0=mu0, var0=var0, vector_scale=True)
 ```
 
 where:
