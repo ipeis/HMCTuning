@@ -1,11 +1,6 @@
-# HMC Tuning
+# HMCTuning
 
 This repository contains a Python package for running HMC with Pytorch, including automatic optimization of its hyperparameters. You will be able to i) sample from any target distribution, given as a unnormalized target, and ii) automatically tune the HMC hyperparameters to improve the efficiency in exploring the density.
-
-The hyperparameters are:
-* Step sizes $\mathbf{\epsilon}$. Matrix with dims $(T,D)$. Different step sizes can be learned to be applied within each state of the chains.
-* Momentum variances, $M$. Matrix with dims $(T, D)$.
-* An inflation/scale parameter $\mathbf{s}$, that can be a scalar or a vector with dims $D$ so that different inflations can be applied per dimension.
 
 For further details about the algorithm, see Section 3.5 of [our paper](https://arxiv.org/pdf/2202.04599.pdf), where we adapted the HMC tuning for improving a  Hierarchical VAE for mixed-type partial data. Original idea can be found [here](https://proceedings.mlr.press/v139/campbell21a.html). If you refer to this algorithm, please consider citing both works. If you use this code, please cite:
 ```
@@ -24,7 +19,7 @@ conda env create -f environment.yml
 ```
 
 ## Usage
-If you want a detailed example, check [<code>notebooks/usage.ipynb</code>](notebooks/usage.ipynb). For a basic usage, continue reading here. An HMC object can be created as in the following example:
+If you want to know the details, check [<code>notebooks/readme.ipynb</code>](notebooks/usage.ipynb). For a basic usage, continue reading here. An HMC object can be created as in the following example:
 ```
 from examples.distributions import *
 from examples.utils import *
@@ -57,7 +52,7 @@ The parameters <code>mu0</code> and <code>var0</code> are optional if you alread
 ### Training
 To train the HMC hyperparameters, call:
 ```
-hmc.fit()
+hmc.fit(steps=100)
 ```
 This will run the gradient-based optimization algorithm that tunes the hyperparameters using Variational Inference.
 
