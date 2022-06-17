@@ -187,15 +187,8 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
 
 if __name__ == '__main__':
 
-    # ============= Initial proposal ============= #
-    """Whilst for this example with simple distributions the proposal is fixed, in more complex
-    models (VAE) the proposal can be conditioned on data (q(z|x))
-    """ 
-    #mu0 = torch.zeros(1, 2)
-    #var0 = torch.ones(1, 2)*0.1
-
     plot_chains(args.distribution, args.steps, samples_per_step=args.chains, chains_per_step=3)
 
-    make_gif('figs/training/{}/'.format(args.distribution))
+    make_gif('figs/training/{}/'.format(args.distribution), destination='assets/gifs/training_{}.gif'.format(args.distribution))
 
 

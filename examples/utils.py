@@ -34,10 +34,10 @@ def plot_bi_gaussian(mu, Sigma, x1grid, x2grid, ax):
 
 
 
-def make_gif(folder, duration=20, delete=True):
+def make_gif(folder, destination, duration=20, delete=True):
     frames = [Image.open(image) for image in sorted(glob.glob(f"{folder}/*.png"))]
     frame_one = frames[0]
-    frame_one.save("{}/samples.gif".format(folder), format="GIF", append_images=frames,
+    frame_one.save(destination, format="GIF", append_images=frames,
                save_all=True, duration=duration, loop=0)
     if delete:
         [os.remove(image) for image in sorted(glob.glob(f"{folder}/*.png"))]

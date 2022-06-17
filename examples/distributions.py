@@ -103,7 +103,7 @@ def update_proposal(distribution, iter, niters):
 
     elif distribution=='wave':
         mu0 = torch.zeros([2])
-        mu0[0] = np.sin(2*torch.pi* iter / niters) * 8
+        mu0[0] = np.sin(2*np.pi* iter / niters) * 8
         var0 = torch.Tensor([1, 1])
 
     return mu0, var0

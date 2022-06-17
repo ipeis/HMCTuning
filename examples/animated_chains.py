@@ -139,6 +139,6 @@ if __name__ == '__main__':
 
     plot_chains(args.distribution, args.steps, samples_per_step=args.chains, chains_per_step=3)
 
-    make_gif('figs/chains/{}/'.format(args.distribution))
+    make_gif('figs/chains/{}/'.format(args.distribution), 'assets/gifs/chains_{}.gif'.format(args.distribution))
 
 

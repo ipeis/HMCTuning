@@ -140,6 +140,6 @@ if __name__ == '__main__':
 
     cyclic_proposal(args.distribution, args.cycles, args.niters)
 
-    make_gif('figs/cycle/{}/'.format(args.distribution))
+    make_gif('figs/cycle/{}/'.format(args.distribution), destination='assets/gifs/cycle_{}.gif'.format(args.distribution))
 
 

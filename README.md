@@ -63,59 +63,16 @@ This will run the gradient-based optimization algorithm that tunes the hyperpara
 
 ### Example
 
-In the following gif you can see how effective is the algorithm. Horizontal scaling is adjusted to inflate the proposal for covering the density.
+In the following gif you can see how effective is the training algorithm. Horizontal scaling is automatically adjusted to inflate the proposal for covering the density.
 
-![Alt Text](figs/cycle/wave/samples.gif)
+![Alt Text](assets/gifs/training_wave.gif)
 
-
-
-
-By default, the test stage will be executed at the end of the training stage. This can be cancelled with <code>--test 0</code> for manually running the test using:
-```
-# Example for testing HH-VAEM on Boston dataset
-python test.py --model HHVAEM --dataset boston --split 0
-```
-which will load the trained model to be tested on the <code>boston</code> test split number <code>0</code>. Once all the splits are tested, the average results can be obtained using the script in the <code>run/</code> folder:
-```
-# Example for obtaining the average test results with HH-VAEM on Boston dataset
-python test_splits.py --model HHVAEM --dataset boston
-```
-### Experiments
-
-<p align="center">
-  <img width="500" src="imgs/hmc.png">
-</p>
-
-The experiments in the paper can be executed using:
-```
-# Example for running the SAIA experiment with HH-VAEM on Boston dataset
-python active_learning.py --model HHVAEM --dataset boston --method mi --split 0
-
-# Example for running the OoD experiment using MNIST and Fashion-MNIST as OoD:
-python ood.py --model HHVAEM --dataset mnist --dataset_ood fashion_mnist --split 0
-```
-Once this is executed on all the splits, you can plot the SAIA error curves or obtain the average OoD metrics using the scripts in the <code>run/</code> folder:
-```
-# Example for running the SAIA experiment with HH-VAEM on Boston dataset
-python active_learning_plots.py --models VAEM HHVAEM --dataset boston
-
-# Example for running the OoD experiment using MNIST and Fashion-MNIST as OoD:
-python ood_splits.py --model HHVAEM --dataset mnist --dataset_ood fashion_mnist
-```
-
-<br>
-<p align="center">
-  <img width="900" src="imgs/saia_curves.png">
-</p>
-<br>
 
 ### Help
 Use the <code>--help</code> option for documentation on the usage of any of the mentioned scripts. 
 
 ## Contributors
-[Ignacio Peis](http://www.tsc.uc3m.es/~ipeis/index.html) <br>
-[Chao Ma](https://chao-ma.org/) <br>
-[José Miguel Hernández-Lobato](https://jmhl.org/) <br>
+[Ignacio Peis](https://ipeis.github.io/) <br>
 
 ## Contact
 For further information: <a href="mailto:ipeis@tsc.uc3m.es">ipeis@tsc.uc3m.es</a>
