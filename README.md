@@ -19,7 +19,7 @@ conda env create -f environment.yml
 ```
 
 ## Usage
-If you want to know the details, check [<code>notebooks/readme.ipynb</code>](notebooks/usage.ipynb). For a basic usage, continue reading here. An HMC object can be created as in the following example:
+If you want to know further details, check [<code>notebooks/readme.ipynb</code>](notebooks/usage.ipynb). For an interactive usage guide, check [<code>notebooks/usage.ipynb</code>](notebooks/usage.ipynb). For a basic usage, continue reading here. An HMC object can be created as in the following example:
 ```
 from examples.distributions import *
 from examples.utils import *
@@ -58,7 +58,7 @@ This will run the gradient-based optimization algorithm that tunes the hyperpara
 
 ### Example
 
-In the following gif you can see how effective is the training algorithm. Horizontal scaling is automatically adjusted to inflate the proposal for covering the density.
+In the following gif you can see how effective is the training algorithm. Horizontal scaling is automatically adjusted to inflate the proposal for covering the density. Step sizes matrix are showed with color scale at the right. Ovjective and SKSD are included.
 
 ![Alt Text](assets/gifs/training_wave.gif)
 
