@@ -16,6 +16,7 @@ def get_logp(name):
             loc=torch.ones(2),
             covariance_matrix=torch.Tensor([[1.2, 0.7], [0.7, 0.5]])
             ).log_prob
+    
     elif name == 'gaussian_mixture':
         K=8     # Number of components
         means = torch.Tensor([[np.cos(k * np.pi/4), np.sin(k * np.pi/4)] for k in range(K)])
@@ -29,8 +30,8 @@ def get_logp(name):
     elif name == 'dual_moon':
         # dual moon
         def logp(x): 
-            x1 = x[0,:,0]
-            x2 = x[0,:,1]
+            x1 = x[...,:,0]
+            x2 = x[...,:,1]
             term1 = 3.125 * (torch.sqrt(x1**2+x2**2)-2)**2
             term2 = torch.log(1e-16+torch.exp(-0.5*((x1+2)/0.6)**2) + torch.exp(-0.5*((x1-2)/0.6)**2))
             return -term1 + term2     
@@ -45,6 +46,25 @@ def get_logp(name):
             logp = torch.log(1e-300+ term1 + term2)   
             return logp
     return logp
+
+
+def initial_proposal(distribution):
+
+    if distribution=='gaussian_mixture':
+        mu0 = torch.zeros([2])
+        var0 = torch.ones([2])*0.01
+
+    elif distribution=='wave':
+        mu0 = torch.zeros([2])
+        #var0 = torch.Tensor([30.0, 1.0])
+        var0 = torch.Tensor([1, 1])
+
+    elif distribution=='dual_moon':
+        mu0 = torch.zeros([2])
+        var0 = torch.ones([2])
+    
+    return mu0, var0
+
 
 def plot_density(name, ax):
     logp = get_logp(name)
@@ -76,21 +96,14 @@ def get_grid_lims(distribution):
         xmax = 10
         ymin = -10
         ymax = 10
+
+    if distribution=='dual_moon':
+        xmin = -3
+        xmax = 3
+        ymin = -3
+        ymax = 3
     return xmin, xmax, ymin, ymax
 
-
-def initial_proposal(distribution):
-
-    if distribution=='gaussian_mixture':
-        mu0 = torch.zeros([2])
-        var0 = torch.ones([2])*0.01
-
-    elif distribution=='wave':
-        mu0 = torch.zeros([2])
-        #var0 = torch.Tensor([30.0, 1.0])
-        var0 = torch.Tensor([1, 1])
-    
-    return mu0, var0
 
 
 def update_proposal(distribution, iter, niters):
@@ -105,5 +118,10 @@ def update_proposal(distribution, iter, niters):
         mu0 = torch.zeros([2])
         mu0[0] = np.sin(2*np.pi* iter / niters) * 8
         var0 = torch.Tensor([1, 1])
+
+    elif distribution=='dual_moon':
+        delta = 2*np.pi/niters
+        mu0 = torch.Tensor([np.cos(iter * delta), np.sin(iter*delta)])
+        var0 = torch.ones([2])*0.01
 
     return mu0, var0

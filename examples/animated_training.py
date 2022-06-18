@@ -25,7 +25,7 @@ from utils import *
 
 parser = argparse.ArgumentParser(description='Train the hyperparameters of HMC using Variational Inference')
 
-parser.add_argument('--distribution', type=str, default='gaussian_mixture', 
+parser.add_argument('--distribution', type=str, default='dual_moon', 
                     help='name of the distribution (from srd/distributions.py)')
 parser.add_argument('--T', type=int, default=5, 
                     help='length of the HMC chains (number of states)')
@@ -69,7 +69,7 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
     ax.set_xlim(xmin, xmax) 
     ax.set_ylim(ymin, ymax) 
     
-    def reset_axis(ax, step, mu0, var0, samples=None,):
+    def reset_axis(ax, mu0, var0, samples=None,):
         ax.clear()
 
         plot_density(distribution, ax)
@@ -117,7 +117,7 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
         alphas = np.linspace(0.1, 1, chains.shape[0])[::-1]
         for c in range(chains.shape[1]):
             for t in range(1,chains.shape[0]+1):
-                reset_axis(ax, e, hmc.mu0.detach().numpy(), torch.exp(hmc.logvar0 + 2*hmc.log_inflation).detach().numpy(), samples)
+                reset_axis(ax, hmc.mu0.detach().numpy(), torch.exp(hmc.logvar0 + 2*hmc.log_inflation).detach().numpy(), samples)
                 ax.plot(chains[:t,c,0].detach().numpy(), chains[:t,c,1].detach().numpy(), marker='o', color=chain_color, alpha=alphas[t-1])
                 plt.savefig('figs/training/{}/{:05d}.png'.format(distribution, im), bbox_inches='tight')
                 im+=1
@@ -125,7 +125,7 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
             plt.savefig('figs/training/{}/{:05d}.png'.format(distribution, im), bbox_inches='tight')
             im+=1
             samples.append(chains[-1, c])
-            reset_axis(ax, e, hmc.mu0.detach().numpy(), torch.exp(hmc.logvar0 + 2*hmc.log_inflation).detach().numpy(), samples)
+            reset_axis(ax, hmc.mu0.detach().numpy(), torch.exp(hmc.logvar0 + 2*hmc.log_inflation).detach().numpy(), samples)
             plt.savefig('figs/training/{}/{:05d}.png'.format(distribution, im), bbox_inches='tight')
             im+=1
         #samples = samples + list(z)
@@ -153,7 +153,7 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
         sksd.append(_sksd.detach().numpy())
         inflation = np.hstack((inflation, torch.exp(hmc.log_inflation.clone()).detach().numpy()[:, np.newaxis]))
 
-    reset_axis(ax, e, hmc.mu0.detach().numpy(), torch.exp(hmc.logvar0 + 2*hmc.log_inflation).detach().numpy(),samples)
+    reset_axis(ax, hmc.mu0.detach().numpy(), torch.exp(hmc.logvar0 + 2*hmc.log_inflation).detach().numpy(),samples)
     ax.scatter(torch.stack(samples)[-samples_per_step:, 0].detach().numpy(), torch.stack(samples)[-samples_per_step:, 1].detach().numpy(), marker='*', color=sample_color, alpha=0.5)
     plt.savefig('figs/training/{}/samples.pdf'.format(distribution, im), bbox_inches='tight')
 

@@ -57,9 +57,9 @@ hmc.fit(steps=100)
 ```
 This will run the gradient-based optimization algorithm that tunes the hyperparameters using Variational Inference.
 
-### Example
+## Example
 
-In the following gif you can observe a simple example on how effective is the training algorithm. Horizontal scaling is automatically increased during training to inflate the proposal for covering the density. 
+In the following gif you can observe a simple example on how effective is the training algorithm for a wave-shaped density. Horizontal scaling is automatically increased during training to inflate the proposal for covering the density. 
 
 ![Alt Text](assets/gifs/training_wave.gif)
 
