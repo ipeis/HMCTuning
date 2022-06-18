@@ -61,7 +61,11 @@ This will run the gradient-based optimization algorithm that tunes the hyperpara
 
 In the following gif you can observe a simple example on how effective is the training algorithm for a wave-shaped density. Horizontal scaling is automatically increased during training to inflate the proposal for covering the density. 
 
-![Alt Text](assets/gifs/training_wave.gif)   &nbsp; &nbsp; ![Alt Text](assets/gifs/training_dual_moon.gif)
+<p> 
+  <img src="assets/gifs/training_wave.gif" width="300" /> 
+  &nbsp; &nbsp;
+  <img src="assets/gifs/training_dual_moon.gif" width="300" />
+</p>
 
 
 ### Help
