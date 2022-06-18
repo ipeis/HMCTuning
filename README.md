@@ -19,7 +19,7 @@ conda env create -f environment.yml
 ```
 
 ## Usage
-If you want to know further details, check [<code>notebooks/readme.ipynb</code>](notebooks/usage.ipynb). For an interactive usage guide, check [<code>notebooks/usage.ipynb</code>](notebooks/usage.ipynb). For a basic usage, continue reading here. An HMC object can be created as in the following example:
+For an extended usage guide, check [<code>notebooks/usage.ipynb</code>](notebooks/usage.ipynb). For a basic usage, continue reading here. An HMC object can be created as in the following example:
 ```
 from examples.distributions import *
 from examples.utils import *
