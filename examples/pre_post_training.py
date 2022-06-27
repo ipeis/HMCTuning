@@ -24,14 +24,14 @@ def pre_post_training(distribution, steps=100, T=5, L=5, chains=100, chains_sksd
     # Create the HMC object
     hmc = HMC(dim=2, logp=logp, T=T,  L=L, chains=100, chains_sksd=30, mu0=mu0_pre, var0=var0_pre, vector_scale=vector_scale)
 
-    samples_pre, chains = hmc.sample(chains=1000)
+    samples_pre, chains = hmc.sample(1000)
 
     # Numpy samples for plotting with maplotlib
     samples_pre = samples_pre.detach().numpy()
 
     hmc.fit(steps=steps)
 
-    samples, chains = hmc.sample(chains=1000)
+    samples, chains = hmc.sample(1000)
 
     # Numpy samples for plotting with maplotlib
     samples = samples.detach().numpy()

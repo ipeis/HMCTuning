@@ -79,19 +79,19 @@ class HMC(nn.Module):
             self.log_inflation = torch.nn.Parameter(torch.zeros(1))
         self.g = torch.eye(self.dim)
 
-    def sample(self, mu0: torch.Tensor=None, var0: torch.Tensor=None, chains: int=None):
+    def sample(self, N: int=None, mu0: torch.Tensor=None, var0: torch.Tensor=None):
         """
         Sample from p(z) with HMC, given a Gaussian proposal (which is inflated by the scale parameter).
         By using this function you keep activated the gradients of the step sizes hyperparameter
 
         Args:
+            N (int, optional): Number of parallel chains (if None, takes the predefined). Defaults to None.     
             mu0 (torch.Tensor): mean of the Gaussian proposal               (batch_size, dim)
-            var0 (torch.Tensor): variance of the Gaussian proposal          (batch_size, dim)
-            chains (int, optional): Number of parallel chains (if None, takes the predefined). Defaults to None.       
+            var0 (torch.Tensor): variance of the Gaussian proposal          (batch_size, dim)  
 
         Returns:
             torch.Tensor: samples                                           (batch_size, chains, dim)
-            torch.Tensor: chains                                            (chains, batch_size, chains, dim)
+            torch.Tensor: N                                            (chains, batch_size, chains, dim)
         """
 
         log_eps = torch.log(torch.exp(self.log_eps))
@@ -106,12 +106,12 @@ class HMC(nn.Module):
         log_inflation = self.log_inflation.data.detach()
         inflation = torch.exp(log_inflation).data.detach()
         # Learn a scale as a global factor
-        if chains==None:
-            chains = self.chains
+        if N==None:
+            N = self.chains
 
         # Repeat for parallel chains
-        mu0 = mu0.repeat(chains, 1, 1).transpose(0, 1)
-        sigma0 = sigma0.repeat(chains, 1, 1).transpose(0, 1)
+        mu0 = mu0.repeat(N, 1, 1).transpose(0, 1)
+        sigma0 = sigma0.repeat(N, 1, 1).transpose(0, 1)
         z = torch.randn_like(mu0) * (sigma0 * inflation) + mu0
 
         z_list = [z]    # to store the whole chains
@@ -129,21 +129,21 @@ class HMC(nn.Module):
             exp_dH[exp_dH.isinf()] = 0
             exp_dH[exp_dH.isnan()] = 0
             p_acceptance = torch.min(torch.Tensor([1.0]).type_as(z), exp_dH)
-            accepted = torch.rand(z.shape[0], chains).type_as(z) < p_acceptance
+            accepted = torch.rand(z.shape[0], N).type_as(z) < p_acceptance
             accepted = accepted.unsqueeze(-1).repeat(1, 1, self.dim).int()
             z = z_new * accepted + (1 - accepted) * z
             z_list.append(z)
         return z, torch.stack(z_list)
 
-    def sample_SKSD(self, mu0: torch.Tensor=None, var0: torch.Tensor=None, chains: int=None):
+    def sample_SKSD(self, N: int=None, mu0: torch.Tensor=None, var0: torch.Tensor=None):
         """
         Sample from p(z) with HMC, given a Gaussian proposal (which is inflated by the scale parameter). 
         By using this function you keep activated the gradients of the scale hyperparameter
 
         Args:
+            N (int, optional): Number of parallel chains (if None, takes the predefined). Defaults to None.      
             mu0 (torch.Tensor): mean of the Gaussian proposal               (batch_size, dim)
-            var0 (torch.Tensor): variance of the Gaussian proposal          (batch_size, dim)
-            chains (int, optional): Number of parallel chains (if None, takes the predefined). Defaults to None.       
+            var0 (torch.Tensor): variance of the Gaussian proposal          (batch_size, dim) 
 
         Returns:
             torch.Tensor: samples                                           (batch_size, chains, dim)
@@ -161,12 +161,12 @@ class HMC(nn.Module):
         log_inflation = self.log_inflation # same scale per all dimension
         inflation = torch.exp(log_inflation)
 
-        if chains==None:
-            chains = self.chains
+        if N==None:
+            N = self.chains_sksd
 
         # Repeat for parallel chains
-        mu0 = mu0.repeat(chains, 1, 1).transpose(0, 1)
-        sigma0 = sigma0.repeat(chains, 1, 1).transpose(0, 1)
+        mu0 = mu0.repeat(N, 1, 1).transpose(0, 1)
+        sigma0 = sigma0.repeat(N, 1, 1).transpose(0, 1)
 
         z = torch.randn_like(mu0) * (sigma0 * inflation) + mu0
         for t in range(self.T):
@@ -183,7 +183,7 @@ class HMC(nn.Module):
             exp_dH[exp_dH.isinf()] = 0
             exp_dH[exp_dH.isnan()] = 0
             p_acceptance = torch.min(torch.Tensor([1.0]).type_as(z), exp_dH.type_as(z))
-            accepted = torch.rand(z.shape[0], chains).type_as(z) < p_acceptance
+            accepted = torch.rand(z.shape[0], N).type_as(z) < p_acceptance
             accepted = accepted.unsqueeze(-1).repeat(1, 1, self.dim).int()
             z = z_new * accepted + (1 - accepted) * z
         return z
@@ -242,7 +242,7 @@ class HMC(nn.Module):
         Returns:
             torch.Tensor: SKSD discrepancy
         """
-        samples1 = self.sample_SKSD(mu0, var0, chains=self.chains_sksd)       # input_batch * sample_size * latent_dim
+        samples1 = self.sample_SKSD(self.chains_sksd, mu0, var0)       # input_batch * sample_size * latent_dim
         samples2 = samples1.clone()                                 # input_batch * sample_size * latent_dim
 
         #score1 = self.logp(samples1)
@@ -306,7 +306,7 @@ class HMC(nn.Module):
         t = trange(steps, desc='Loss')
         for e in t:
             self.optimizer.zero_grad()
-            z, _ = self.sample(self.mu0, torch.exp(self.logvar0), self.chains)
+            z, _ = self.sample(self.chains, self.mu0, torch.exp(self.logvar0))
             _loss = -self.logp(z)
 
             _loss = _loss[torch.isfinite(_loss)].mean()

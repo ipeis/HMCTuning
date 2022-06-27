@@ -1,8 +1,8 @@
 # HMCTuning
 
-This repository contains a Python package for running HMC with Pytorch, including automatic optimization of its hyperparameters. You will be able to i) sample from any target distribution, given as a unnormalized target, and ii) automatically tune the HMC hyperparameters to improve the efficiency in exploring the density.
+This repository contains a Python package for running HMC with Pytorch, including automatic optimization of its hyperparameters. You will be able to i) sample from any distribution, given as a unnormalized target, and ii) automatically tune the HMC hyperparameters to improve the efficiency in exploring the density.
 
-For further details about the algorithm, see Section 3.5 of [our paper](https://arxiv.org/pdf/2202.04599.pdf), where we adapted the HMC tuning for improving a  Hierarchical VAE for mixed-type partial data. Original optimization idea can be found [here](https://proceedings.mlr.press/v139/campbell21a.html). If you refer to this algorithm, please consider citing both works. If you use this code, please cite:
+For further details about the algorithm, see Section 3.5 of [our paper](https://arxiv.org/pdf/2202.04599.pdf), where we adapted the HMC tuning for improving the inference in  a Hierarchical VAE for mixed-type partial data. Original idea for optimizing HMC via Variational Inference can be found [here](https://proceedings.mlr.press/v139/campbell21a.html). If you refer to this algorithm, please consider citing both works. If you use this code, please cite:
 ```
 @article{peis2022missing,
   title={Missing Data Imputation and Acquisition with Deep Hierarchical Models and Hamiltonian Monte Carlo},
@@ -46,9 +46,9 @@ where:
 ### Sampling
 For sampling from the created HMC object, just call:
 ```
-samples, chains = hmc.sample(chains, mu0, var0)
+samples, chains = hmc.sample(N)
 ```
-The parameters <code>mu0</code> and <code>var0</code> are optional if you already passed them when initializing. Your final samples will be stored in <code>samples</code>, and, if needed, you can inspect the full <code>chains</code>.
+Your final <code>N</code> samples will be stored in <code>samples</code>, and, if needed, you can inspect the full <code>chains</code>.
 
 ### Training
 To train the HMC hyperparameters, call:
@@ -59,7 +59,7 @@ This will run the gradient-based optimization algorithm that tunes the hyperpara
 
 ## Example
 
-In the following gif you can observe a simple example on how effective is the training algorithm for a wave-shaped density. Horizontal scaling is automatically increased during training to inflate the proposal for covering the density. 
+In the following gifs you can observe two simple examples on how effective is the training algorithm for wave-shaped (left) and dual-mooon densities. Horizontal scaling is automatically increased during training to inflate the proposal for covering the density. 
 
 <p> 
   <img src="assets/gifs/training_wave.gif" width="400" /> 
