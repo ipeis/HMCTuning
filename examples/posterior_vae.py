@@ -96,5 +96,5 @@ if __name__ == '__main__':
     plt.axis('off')
     #plt.axis('tight')
 
-    plt.savefig('./assets/pdf/posterior_{}.pdf'.format(sample_idx))
+    plt.savefig('./assets/pdf/posterior_{}.png'.format(sample_idx), dpi=200)
     

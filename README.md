@@ -70,7 +70,7 @@ In the following gifs you can observe two simple examples on how effective is th
 ## Example 2: posterior of a VAE
 
 <p> 
-  <img src="assets/pdf/posterior_89.pdf" width="400" /> 
+  <img src="assets/pdf/posterior_89.png" width="400" /> 
 </p>
 
 
