@@ -6,7 +6,8 @@
 #  been included as part of this package.                                       +
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-from src.models.vae import *
+from src.models.vae import VAE
+from src.models.utils import *
 from src.hmc import *
 
 # ============= HMCVAE ============= #
@@ -254,7 +255,7 @@ class HMCVAE(VAE):
             # Reparametrization
             z = reparameterize(mu, torch.exp(logvar))
         else: # sample from the true posterior
-            z, _ = self.HMC.sample(mu, torch.exp(logvar), chains=samples)
+            z, _ = self.HMC.sample(samples, mu, torch.exp(logvar))
         return z
 
     # ============= Modified PL functions ============= #

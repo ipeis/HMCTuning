@@ -74,10 +74,11 @@ class HMC(nn.Module):
 
         # Scale (inflation) factor
         if self.vector_scale:
-            self.log_inflation = torch.nn.Parameter(torch.zeros(2))
+            self.log_inflation = torch.nn.Parameter(torch.zeros(dim))
         else:
             self.log_inflation = torch.nn.Parameter(torch.zeros(1))
-        self.g = torch.eye(self.dim)
+        self.g = torch.nn.Parameter(torch.eye(self.dim))
+        self.g.requires_grad = False
 
     def sample(self, N: int=None, mu0: torch.Tensor=None, var0: torch.Tensor=None):
         """

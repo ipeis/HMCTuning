@@ -18,12 +18,12 @@ from torchvision import datasets, transforms
 
 parser = argparse.ArgumentParser(description='Train the HMC-VAE model')
 
-parser.add_argument('--gpu', type=int, default=0,
+parser.add_argument('--gpu', type=int, default=1,
                     help='use gpu via cuda (1) or cpu (0)')
 args = parser.parse_args()
 
 config = {
-            'latent_dim': 20,
+            'latent_dim': 2,
             'dim_x': 28**2,
             'dim_h': 512,
             'batch_size': 128,
@@ -39,7 +39,7 @@ dataset = datasets.MNIST(train=True, download=True, root='./data',
                             BinarizeMNIST()])
                             )
 
-train_loader = torch.utils.data.DataLoader( dataset, batch_size=config['batch_size'])
+train_loader = torch.utils.data.DataLoader( dataset, batch_size=config['batch_size'], num_workers=8)
 
 epochs = config['epochs']
 config.pop('epochs')

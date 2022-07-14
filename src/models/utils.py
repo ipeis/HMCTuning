@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 
-
 # ============= Extra functions ============= #
 
 def reparameterize(mu: torch.Tensor, var: torch.Tensor) -> torch.Tensor:
@@ -95,5 +94,19 @@ def get_arch(dim_x: int, latent_dim: int, arch_name='base', dim_h=256):
 
     return encoder, decoder
 
+def logmeanexp(inputs: torch.Tensor, dim=1) -> torch.Tensor:
+    """
+    Apply the logmeanexp trick to a given input
 
-    
+    Args:
+        inputs (torch.Tensor): input tensor
+        dim (int, optional): dimension to apply the mean. Defaults to 1.
+
+    Returns:
+        torch.Tensor: resulting logmeanexp
+    """
+    if inputs.size(dim) == 1:
+        return inputs
+    else:
+        input_max = inputs.max(dim, keepdim=True)[0]
+        return (inputs - input_max).exp().mean(dim).log() + input_max.squeeze()

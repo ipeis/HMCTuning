@@ -57,7 +57,7 @@ hmc.fit(steps=100)
 ```
 This will run the gradient-based optimization algorithm that tunes the hyperparameters using Variational Inference.
 
-## Example
+## Example 1: 2D densities
 
 In the following gifs you can observe two simple examples on how effective is the training algorithm for wave-shaped (left) and dual-mooon densities. Horizontal scaling is automatically increased during training to inflate the proposal for covering the density. 
 
@@ -66,6 +66,13 @@ In the following gifs you can observe two simple examples on how effective is th
   &nbsp; &nbsp;
   <img src="assets/gifs/training_dual_moon.gif" width="400" />
 </p>
+
+## Example 2: posterior of a VAE
+
+<p> 
+  <img src="assets/pdf/posterior_89.pdf" width="400" /> 
+</p>
+
 
 
 ### Help

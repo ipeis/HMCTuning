@@ -113,7 +113,7 @@ def cyclic_proposal(distribution, cycles=10, niters=1000):
             hmc = HMC(dim=2, logp=logp, T=args.T,  L=args.L, chains=1, mu0=mu0, var0=var0)
 
             # Sample 
-            z, chains = hmc.sample(mu0=hmc.mu0, var0=torch.exp(hmc.logvar0), chains=10)
+            z, chains = hmc.sample(mu0=hmc.mu0, var0=torch.exp(hmc.logvar0), N=10)
             samples.append(z)
             alphas = np.linspace(0.1, 1, chains.shape[0])[::-1]
 

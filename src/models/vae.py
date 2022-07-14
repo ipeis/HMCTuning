@@ -168,7 +168,7 @@ class Encoder(nn.Module):
         kl = -0.5 * torch.sum(1. + logvar - mu ** 2 - torch.exp(logvar), dim=-1, keepdim=True)
         return kl
     
-    def logq(self, z, ):
+    def logq(self, z, x):
         mu_z, logvar_z = self.forward(x)
         mu_z = mu_z.unsqueeze(-2)
         logvar_z = logvar_z.unsqueeze(-2)
@@ -324,6 +324,32 @@ class VAE(pl.LightningModule):
         """
         elbo, _, _ = self.forward(batch)
         return elbo
+
+    def elbo_iwae(self, batch: tuple, samples=1000) -> torch.Tensor:
+        """
+        Computes the ELBO (following the Importance Weighted Autoencoder, IWAE) of each datapoint in a batch
+
+        Args:
+            batch (tuple): contains (data, observed_data, target, observed_target)
+            samples (int): number of samples from the latent for MC. Defaults to 1000.
+
+        Returns:
+            torch.Tensor: iwae elbo per datapoint
+        """
+         # Get data
+        x, _ = batch
+        mu_z, logvar_z = self.encoder(x)
+
+        z = self.sample_z(mu_z, logvar_z, samples=samples)
+
+        logp = self.logp(x, z)
+        logq = self.encoder.logq(z, x)
+
+        log_w = logp - logq
+
+        elbo_iwae = logmeanexp(log_w, -1)
+
+        return elbo_iwae
 
     def logp(self, x: torch.Tensor, z: torch.Tensor) -> torch.Tensor:
         """

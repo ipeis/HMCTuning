@@ -6,6 +6,4 @@
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 from src.hmc import *
-from src.models.vae import *
-from src.models.hmc_vae import *
-from src.models.utils import *
+from src.models import *

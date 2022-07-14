@@ -37,17 +37,7 @@ parser.add_argument('--chains_sksd', type=int, default=30,
                     help='number of parallel chains for computing the SKSD')      
 parser.add_argument('--steps', type=int, default=100, 
                     help='number of training steps')           
-parser.add_argument('--gpu', type=int, default=1,
-                    help='use gpu via cuda (1) or cpu (0)')
 args = parser.parse_args()
-
-
-# ============= Activate CUDA ============= #
-args.cuda = int(args.gpu>0) and torch.cuda.is_available()
-args.cuda = args.cuda == True and torch.cuda.is_available()
-device = torch.device("cuda" if args.cuda else "cpu")
-if str(device) == "cuda":
-    print('cuda activated')
 
 
 if not os.path.isdir('./figs/training/{}'.format(args.distribution)):
@@ -113,7 +103,7 @@ def plot_chains(distribution, steps, samples_per_step=100, chains_per_step=10):
     for e in progress:
 
         # Sample 
-        z, chains = hmc.sample(chains=samples_per_step)
+        z, chains = hmc.sample(samples_per_step)
         chains = chains[:, 0, :chains_per_step, :].reshape(hmc.T+1, chains_per_step, 2)
         alphas = np.linspace(0.1, 1, chains.shape[0])[::-1]
         for c in range(chains.shape[1]):

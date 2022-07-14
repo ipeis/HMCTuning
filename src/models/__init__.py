@@ -4,3 +4,8 @@
 #  the "MIT License Agreement". Please see the LICENSE file that should have    +
 #  been included as part of this package.                                       +
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+from src.models.vae import *
+from src.models.hmc_vae import *
+from src.models.utils import *
+from src.models.load_models import *
