@@ -67,7 +67,7 @@ In the following gifs you can observe two simple examples on how effective is th
   <img src="assets/gifs/training_dual_moon.gif" width="400" />
 </p>
 
-## Example 2: improving VAE inference
+## Example 2: improving inference in Deep Generative Models
 
 We used our method for improving the inference of advanced Variational Autoencoders like the one presented in [our paper](https://arxiv.org/pdf/2202.04599.pdf). In the following Figure, an illustrative example for a simple VAE is included: when training the VAE parameters jointly with the HMC hyperparameters, the true posterior (green) is successfully explored with HMC samples (orange) using the Gaussian proposal provided by the encoder (blue).
 <p> 
