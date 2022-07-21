@@ -59,7 +59,7 @@ This will run the gradient-based optimization algorithm that tunes the hyperpara
 
 ## Example 1: 2D densities
 
-In the following gifs you can observe two simple examples on how effective is the training algorithm for wave-shaped (left) and dual-mooon densities. Horizontal scaling is automatically increased during training to inflate the proposal for covering the density. 
+In the following gifs you can observe two simple examples on how effective is the training algorithm for wave-shaped (left) and dual-mooon (right) densities. Horizontal scaling is automatically increased during training to inflate the proposal for covering the density. 
 
 <p> 
   <img src="assets/gifs/training_wave.gif" width="400" /> 
@@ -69,7 +69,7 @@ In the following gifs you can observe two simple examples on how effective is th
 
 ## Example 2: improving inference in Deep Generative Models
 
-We used our method for improving the inference of advanced Variational Autoencoders like the one presented in [our paper](https://arxiv.org/pdf/2202.04599.pdf). In the following Figure, an illustrative example for a simple VAE is included: when training the VAE parameters jointly with the HMC hyperparameters, the true posterior (green) is successfully explored with HMC samples (orange) using the Gaussian proposal provided by the encoder (blue).
+We used our method for improving the inference of advanced Variational Autoencoders like the one presented in [our paper](https://arxiv.org/pdf/2202.04599.pdf). In the following Figure, an illustrative example for a simple VAE is included: when training the VAE parameters jointly with the HMC hyperparameters, the multimodal true posterior (green) is successfully explored with HMC samples (orange) using the Gaussian proposal provided by the encoder (blue).
 <p style="text-align:center;"> 
   <img src="assets/pdf/posterior_89.png" width="400"/> 
 </p>
